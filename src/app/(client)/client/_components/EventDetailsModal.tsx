@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { formatDescriptionWithLinks } from '../../../utils/formatDescription'
+import { formatInTimeZone } from 'date-fns-tz'
 
 interface Event {
   id: string
@@ -18,62 +18,114 @@ interface EventDetailsModalProps {
   date: Date | null
 }
 
+// Helper function to format description with clickable links
+const formatDescriptionWithLinks = (description: string) => {
+  return description.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
+    if (part.match(/^https?:\/\/[^\s]+$/)) {
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#006198] hover:underline"
+        >
+          {part}
+        </a>
+      )
+    }
+    return part
+  })
+}
+
 export default function EventDetailsModal({ isOpen, onClose, events, date }: EventDetailsModalProps) {
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
+      <div 
+        className="bg-white rounded-lg max-w-[500px] w-full max-h-[90vh] shadow-lg"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Modal Header */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <h2 className="text-lg font-semibold text-[#344053]">
               Events for {date?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
             </h2>
-            <button
+            <button 
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-500"
+              className="text-[#344053] hover:text-[#006198] text-xl"
             >
-              <span className="sr-only">Close</span>
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-
-          {events.map((event) => (
-            <div key={event.id} className="mb-6 last:mb-0">
-              <h3 className="text-lg font-semibold text-[#006198] mb-2">
-                {event.title}
-              </h3>
-              <div className="text-sm text-gray-600 mb-2">
-                {event.start.toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                })} - {event.end.toLocaleTimeString('en-US', {
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                })}
-              </div>
-              {event.description && (
-                <div className="text-gray-700 text-sm whitespace-pre-wrap">
-                  {formatDescriptionWithLinks(event.description)}
-                </div>
-              )}
-            </div>
-          ))}
-
-          <div className="mt-6">
-            <button
-              onClick={onClose}
-              className="w-full bg-[#006198] text-white py-2 px-4 rounded hover:bg-[#004d7a] transition-colors"
-            >
-              Close
+              ✕
             </button>
           </div>
         </div>
+
+        {/* Modal Body */}
+        <div className="p-4 overflow-y-auto max-h-[60vh]">
+          {events.length > 0 ? (
+            <div className="space-y-4">
+              {events.map((event) => (
+                <div key={event.id} className="p-3 rounded-lg bg-[#f8f9fb] last:mb-0">
+                  <h3 className="text-base font-semibold text-[#006198] mb-1">
+                    {event.title}
+                  </h3>
+                  <div className="text-[#4A4C56] text-sm mb-2">
+                    {event.start.toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })} - {event.end.toLocaleTimeString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true
+                    })}
+                  </div>
+                  {event.description && (
+                    <div className="text-[#344053] text-sm whitespace-pre-wrap">
+                      {formatDescriptionWithLinks(event.description)}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center text-[#344053] py-8">
+              No events scheduled for this day
+            </div>
+          )}
+        </div>
+
+        {/* Modal Footer */}
+        <div className="p-4 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="w-full px-4 py-2 bg-[#006198] text-white text-base rounded-lg hover:bg-[#004d7a] transition-colors"
+          >
+            Close
+          </button>
+        </div>
       </div>
+
+      {/* Scrollbar Styles */}
+      <style jsx global>{`
+        /* Custom Scrollbar */
+        .overflow-y-auto::-webkit-scrollbar {
+          width: 6px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 3px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 3px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #555;
+        }
+      `}</style>
     </div>
-  );
+  )
 }
