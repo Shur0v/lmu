@@ -1,6 +1,9 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
+import { toast } from 'react-hot-toast'
+import { useRouter } from 'next/navigation'
+import EventApis from '../../../API/EventApi'
 
 // Utility function to convert 12-hour time to 24-hour time
 export const convert12to24 = (time12h: string): string => {
@@ -70,10 +73,39 @@ export const formatDateTime = (date: string, time: string, timezone: string = 'A
 }
 
 export default function DashboardClient() {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSubmit = async (e: React.FormEvent, eventData: any) => {
+    e.preventDefault()
+    setIsLoading(true)
+    
+    try {
+      const response = await EventApis.createEvent(eventData)
+      
+      // Check if response status is in success range (200-299)
+      if (response.status && response.status >= 200 && response.status < 300) {
+        toast.success('Event created successfully!')
+        router.push('/client/events')
+        return
+      }
+      
+      // If we get here, it's an error
+      console.error('Event creation failed:', response)
+      toast.error(response.message || 'Failed to create event')
+      
+    } catch (error: any) {
+      console.error('Error creating event:', error)
+      toast.error(error.message || 'An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="dashboard-container">
       <h1>Dashboard</h1>
-      {/* Your dashboard content */}
+      {/* Add your form here */}
     </div>
   )
 } 
