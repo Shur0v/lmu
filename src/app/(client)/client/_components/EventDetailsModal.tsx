@@ -20,12 +20,18 @@ interface EventDetailsModalProps {
 
 // Helper function to format description with clickable links
 const formatDescriptionWithLinks = (description: string) => {
-  return description.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
-    if (part.match(/^https?:\/\/[^\s]+$/)) {
+  // This regex will match:
+  // 1. URLs starting with http:// or https://
+  // 2. URLs starting with www.
+  // 3. Any domain name with a dot extension
+  const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/?[^\s]*)?)/g
+  return description.split(urlRegex).filter(Boolean).map((part, i) => {
+    if (part.match(urlRegex)) {
+      const href = part.startsWith('http') ? part : part.startsWith('www.') ? `http://${part}` : `http://${part}`
       return (
         <a
           key={i}
-          href={part}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#006198] hover:underline"
