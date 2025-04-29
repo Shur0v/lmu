@@ -20,28 +20,43 @@ interface EventDetailsModalProps {
 
 // Helper function to format description with clickable links
 const formatDescriptionWithLinks = (description: string) => {
-  // This regex will match:
-  // 1. URLs starting with http:// or https://
-  // 2. URLs starting with www.
-  // 3. Any domain name with a dot extension
+  if (!description) return '';
+  
+  // This regex will match URLs more reliably
   const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)|([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/?[^\s]*)?)/g
-  return description.split(urlRegex).filter(Boolean).map((part, i) => {
-    if (part.match(urlRegex)) {
-      const href = part.startsWith('http') ? part : part.startsWith('www.') ? `http://${part}` : `http://${part}`
-      return (
+  
+  const parts = description.split(urlRegex)
+  const matches = description.match(urlRegex)
+  const result = []
+  let matchIndex = 0
+
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i]) {
+      result.push(parts[i])
+    }
+    if (matches && matchIndex < matches.length) {
+      const url = matches[matchIndex]
+      const href = url.startsWith('http') ? url : url.startsWith('www.') ? `http://${url}` : `http://${url}`
+      result.push(
         <a
-          key={i}
+          key={`link-${matchIndex}`}
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#006198] hover:underline"
+          className="text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation()
+            window.open(href, '_blank')
+          }}
         >
-          {part}
+          {url}
         </a>
       )
+      matchIndex++
     }
-    return part
-  })
+  }
+  
+  return result
 }
 
 export default function EventDetailsModal({ isOpen, onClose, events, date }: EventDetailsModalProps) {
@@ -89,7 +104,7 @@ export default function EventDetailsModal({ isOpen, onClose, events, date }: Eve
                     })}
                   </div>
                   {event.description && (
-                    <div className="text-[#344053] text-sm whitespace-pre-wrap">
+                    <div className="text-[#344053] text-sm whitespace-pre-wrap break-words">
                       {formatDescriptionWithLinks(event.description)}
                     </div>
                   )}
